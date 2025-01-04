@@ -1,0 +1,77 @@
+from pyspark.sql import SparkSession
+import requests
+from pyspark.sql.functions import current_timestamp
+
+
+# Create a Spark session
+spark = SparkSession.builder.appName("Fetch Air Quality Data").getOrCreate()
+
+# Load the `capitals_coordinates` table from the Lakehouse
+# Assuming the Lakehouse path is `/lakehouse/default/Tables/capitals_coordinates`
+capitals_df = spark.read.format("delta").load("Tables/capitals_coordinates")
+
+# Show the contents of the table
+#capitals_df.show()
+
+# Define the WAQI API token
+API_TOKEN = "88e4c4c4e8c0d62b6e8f46ff909d340e796d28f6"
+
+# API endpoint
+BASE_URL = "https://api.waqi.info/feed/geo:{lat};{lon}/?token={token}"
+
+# Function to fetch data from the API
+def fetch_air_quality(row):
+    try:
+        # Construct the API URL
+        url = BASE_URL.format(lat=row["Latitude"], lon=row["Longitude"], token=API_TOKEN)
+        
+        # Make the API request
+        response = requests.get(url)
+        
+        # Parse the API response
+        if response.status_code == 200:
+            result = response.json()
+            if result.get("status") == "ok":
+                data = result.get("data", {})
+                return {
+                    "Country": row["Country"],
+                    "Capital_City": row["Capital_City"],
+                    "Latitude": row["Latitude"],
+                    "Longitude": row["Longitude"],
+                    "AQI": data.get("aqi"),
+                    "Dominant_Pollutant": data.get("dominentpol"),
+                    "Timestamp": data["time"]["s"]
+                }
+        # Return error information if API call fails
+        return {
+            "Country": row["Country"],
+            "Capital_City": row["Capital_City"],
+            "Latitude": row["Latitude"],
+            "Longitude": row["Longitude"],
+            "Error": response.text
+        }
+    except Exception as e:
+        # Return error details
+        return {
+            "Country": row["Country"],
+            "Capital_City": row["Capital_City"],
+            "Latitude": row["Latitude"],
+            "Longitude": row["Longitude"],
+            "Error": str(e)
+        }
+
+# Convert the DataFrame rows to RDD for parallel processing
+capitals_rdd = capitals_df.rdd.map(lambda row: fetch_air_quality(row.asDict()))
+
+# Convert the RDD back to a Spark DataFrame
+air_quality_df = spark.createDataFrame(capitals_rdd)
+
+# Add the ADT_Created_DTM column with the current datetime
+air_quality_df = air_quality_df.withColumn("ADT_Created_DTM", current_timestamp())
+
+# Show the resulting DataFrame
+air_quality_df.show(truncate=False)
+
+# Save the results to the Lakehouse
+air_quality_df.write.mode("overwrite").option("overwriteSchema", "true").format("delta").saveAsTable("Capitals_air_quality_Index")
+

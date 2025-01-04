@@ -1,0 +1,19 @@
+from pyspark.sql import SparkSession
+
+# Initialize Spark session
+spark = SparkSession.builder.appName("LoadCSVtoLakehouse").getOrCreate()
+
+# Define paths and table names
+csv_path = "Files/Capitals_Coordinates.csv"
+lakehouse_table = "Capitals_Coordinates"
+
+# Load CSV into a Spark DataFrame
+df = spark.read.format("csv").option("header","true").load("Files/Capitals_Coordinates.csv")
+
+# Perform any transformations if needed (Optional)
+#df = df.withColumnRenamed("old_column_name", "new_column_name")  # Example transformation
+
+# Write DataFrame to the Lakehouse table
+df.write.format("delta").mode("overwrite").saveAsTable(lakehouse_table)
+
+print("CSV data successfully loaded into the Lakehouse table!")

@@ -1,5 +1,4 @@
-# Microsoft_Fabric_Project_AQI
-**Microsoft Fabric - Data Engineering Project**
+# Microsoft_Fabric_Data Engineering_Project_AQI
 
 **Project Title: Air Quality Index (AQI) Monitoring for Capital Cities Worldwide**
 

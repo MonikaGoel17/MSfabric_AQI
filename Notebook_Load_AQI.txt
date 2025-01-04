@@ -14,7 +14,7 @@ capitals_df = spark.read.format("delta").load("Tables/capitals_coordinates")
 #capitals_df.show()
 
 # Define the WAQI API token
-API_TOKEN = "88e4c4c4e8c0d62b6e8f46ff909d340e796d28f6"
+API_TOKEN = ""
 
 # API endpoint
 BASE_URL = "https://api.waqi.info/feed/geo:{lat};{lon}/?token={token}"

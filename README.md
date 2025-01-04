@@ -2,6 +2,9 @@
 
 **Project Title: Air Quality Index (AQI) Monitoring for Capital Cities Worldwide**
 
+This project focuses on developing a robust data engineering and visualization pipeline to monitor and analyze air quality in capital cities worldwide. By leveraging Microsoft Fabric, PySpark notebooks, and Power BI, the solution automates the collection of Air Quality Index (AQI) data from public API, processes it, and presents it in a user-friendly manner. 
+
+
 **Data Engineering**
 
 **1.	Data Preparation and Loading:**
